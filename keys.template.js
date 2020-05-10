@@ -15,6 +15,9 @@
         strava: '',
 
         // OpenMapSurfer (OpenRouteService API), https://openrouteservice.org/plans/
-        openrouteservice: ''
+        openrouteservice: '',
+
+        // Google Street View API key
+        googleStreetView: ''
     };
 })();

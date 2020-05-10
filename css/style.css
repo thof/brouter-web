@@ -171,6 +171,10 @@ input#trackname:focus:invalid {
     cursor: cell;
 }
 
+.streetview-enabled {
+    cursor: pointer;
+}
+
 #map {
     /* center error message horizontally */
     display: flex;

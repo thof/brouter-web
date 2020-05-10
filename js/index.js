@@ -288,6 +288,15 @@
             })
         );
 
+        // Google Street View integration
+        if (BR.keys.googleStreetView) {
+            map.addControl(
+                new BR.StreetView({
+                    routing: routing
+                })
+            );
+        }
+
         // initial option settings (after controls are added and initialized with onAdd)
         router.setOptions(nogos.getOptions());
         router.setOptions(routingOptions.getOptions());
