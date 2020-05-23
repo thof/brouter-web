@@ -1,0 +1,13 @@
+{
+    "geometry": null,
+    "properties": {
+        "attribution": {},
+        "id": "googlemaps",
+        "max_zoom": 24,
+        "name": "Google Maps",
+        "type": "roadmap",
+        "dataSource": "googlemaps" 
+    },
+    "type": "Feature"
+}
+  

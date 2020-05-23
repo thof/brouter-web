@@ -1,6 +1,7 @@
 BR.StreetView = L.Control.extend({
     options: {
         routing: null,
+        layersControl: null,
         shortcut: {
             draw: {
                 enable: 80, // char code for 'p'
@@ -21,6 +22,12 @@ BR.StreetView = L.Control.extend({
         this.map = map;
         this._streetView = [];
         this._drawState = false;
+        this._originalActiveLayer = null;
+        this.GOOGLE_MAPS_ID = 'googlemaps';
+        if (!(this.GOOGLE_MAPS_ID in BR.layerIndex)) {
+            return;
+        }
+        this._googleMapsName = BR.layerIndex[this.GOOGLE_MAPS_ID].properties.name;
 
         var container = new L.DomUtil.create('div');
         // keys not working when map container does not have focus, use document instead
@@ -38,8 +45,12 @@ BR.StreetView = L.Control.extend({
 
     // press and hold 'ctrl' to activate streetview
     _keydownListener: function(e) {
-        if (e.keyCode === this.options.shortcut.ctrl) {
+        if (e.keyCode === this.options.shortcut.ctrl && this.options.layersControl.getLayer(this._googleMapsName)) {
+            // change the cursor to pointer
             L.DomUtil.addClass(this.map.getContainer(), 'streetview-enabled');
+            // store the original active layer
+            this._originalActiveLayer = this.options.layersControl.getActiveBaseLayer();
+            // store the current drawing state and disable drawing if it's enabled
             this._drawState = this.options.routing._draw._enabled;
             if (this._drawState) {
                 this.options.routing.draw(false);
@@ -49,8 +60,19 @@ BR.StreetView = L.Control.extend({
 
     // release 'ctrl' to deactivate streeview
     _keyupListener: function(e) {
-        if (e.keyCode === this.options.shortcut.ctrl) {
+        if (e.keyCode === this.options.shortcut.ctrl && this.options.layersControl.getLayer(this._googleMapsName)) {
+            // restore the original active layer if it wasn't Google Maps layer
+            if (
+                this.options.layersControl.getActiveBaseLayer().layer.id === this.GOOGLE_MAPS_ID &&
+                this._originalActiveLayer.layer.id !== this.GOOGLE_MAPS_ID
+            ) {
+                googleMapsLayer = this.options.layersControl.getLayerById(this.GOOGLE_MAPS_ID);
+                this.map.removeLayer(googleMapsLayer.layer);
+                this.options.layersControl.activateLayer(this._originalActiveLayer);
+                this._streetViewLayer.remove();
+            }
             this._streetView = [];
+            // reset the pointer cursor and drawing state
             L.DomUtil.removeClass(this.map.getContainer(), 'streetview-enabled');
             if (this._drawState) {
                 this.options.routing.draw(true);
@@ -59,10 +81,16 @@ BR.StreetView = L.Control.extend({
     },
 
     _clickListener: function(e) {
-        if (e.ctrlKey) {
+        if (e.ctrlKey && this.options.layersControl.getLayer(this._googleMapsName)) {
+            // replace the original active layer by Google Maps base layer
+            if (this.options.layersControl.getActiveBaseLayer().layer.id !== this.GOOGLE_MAPS_ID) {
+                this.map.removeLayer(this._originalActiveLayer.layer);
+                googleMapsLayer = this.options.layersControl.getLayerById(this.GOOGLE_MAPS_ID);
+                this.options.layersControl.activateLayer(googleMapsLayer);
+            }
+            // create overlay layer with Street View panorama
             var initialLatLng = this.map.mouseEventToLatLng(e);
             this._streetView.push(initialLatLng);
-            // console.log('Google Street View array '+this._streetView);
             if (this._streetView.length > 1 && BR.keys.googleStreetView) {
                 var pointA = this._streetView[this._streetView.length - 2];
                 var pointB = this._streetView[this._streetView.length - 1];
@@ -87,6 +115,9 @@ BR.StreetView = L.Control.extend({
     },
 
     _mousedownStreetViewLayer: function(e) {
+        if (e.originalEvent.ctrlKey) {
+            return;
+        }
         this._streetViewLayer.remove();
         if (this._drawState) {
             this.options.routing.draw(true);
@@ -94,6 +125,9 @@ BR.StreetView = L.Control.extend({
     },
 
     _mouseoverStreetViewLayer: function(e) {
+        if (e.originalEvent.ctrlKey) {
+            return;
+        }
         this._drawState = this.options.routing._draw._enabled;
         if (this._drawState) {
             this.options.routing.draw(false);
@@ -101,6 +135,9 @@ BR.StreetView = L.Control.extend({
     },
 
     _mouseoutStreetViewLayer: function(e) {
+        if (e.originalEvent.ctrlKey) {
+            return;
+        }
         this.options.routing.draw(true);
         if (this._drawState) {
             this.options.routing.draw(true);

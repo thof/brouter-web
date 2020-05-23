@@ -231,7 +231,10 @@ BR.confLayers.getPropertyOverrides = function() {
         'cyclosm': {
             'language_code': 'fr',
             'nameShort': 'CyclOSM',
-            'mapUrl': 'https://www.cyclosm.org/#map={zoom}/{lat}/{lon}/cyclosm'
+            'mapUrl': 'https://dev.{s}.tile.openstreetmap.fr/cyclosm/{z}/{x}/{y}.png'
+        },
+        'googlemaps': {
+            'name': 'Google Maps (roadmap)'
         },
     };
 };

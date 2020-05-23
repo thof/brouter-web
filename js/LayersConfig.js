@@ -251,6 +251,13 @@ BR.LayersConfig = L.Class.extend({
             if (props.subdomains) {
                 layer.subdomains = props.subdomains;
             }
+        } else if (props.dataSource === 'googlemaps') {
+            // Google Maps
+            $.getScript('https://maps.googleapis.com/maps/api/js?key=' + BR.keys.googleStreetView);
+            layer = L.gridLayer.googleMutant({
+                maxZoom: props.maxZoom,
+                type: props.type
+            });
         } else {
             // JOSM
             var josmUrl = url;

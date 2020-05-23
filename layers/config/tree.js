@@ -13,7 +13,9 @@ BR.confLayers.tree = {
             '1065', // Hike & Bike Map
             '1016', // 4UMaps,
             'openmapsurfer',
-            '1059'  // ÖPNV Karte
+            '1059',  // ÖPNV Karte
+            'cyclosm',
+            'googlemaps'
         ],
         'worldwide-monolingual': [
             'osm-mapnik-german_style',

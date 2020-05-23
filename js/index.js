@@ -292,7 +292,8 @@
         if (BR.keys.googleStreetView) {
             map.addControl(
                 new BR.StreetView({
-                    routing: routing
+                    routing: routing,
+                    layersControl: mapContext.layersControl
                 })
             );
         }
