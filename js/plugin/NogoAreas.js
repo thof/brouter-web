@@ -1,4 +1,13 @@
 BR.NogoAreas = L.Control.extend({
+    options: {
+        shortcut: {
+            draw: {
+                enable: 78, // char code for 'n'
+                disable: 27 // char code for 'ESC'
+            }
+        }
+    },
+
     statics: {
         MSG_BUTTON: 'Draw no-go area (circle)',
         MSG_BUTTON_CANCEL: 'Cancel drawing no-go area',
@@ -41,12 +50,25 @@ BR.NogoAreas = L.Control.extend({
             e.layer.toggleEdit();
         });
 
-        var editTools = (this.editTools = map.editTools = new L.Editable(map, {
+        var editTools = (this.editTools = map.editTools = new BR.Editable(map, {
             circleEditorClass: BR.DeletableCircleEditor,
             // FeatureGroup instead of LayerGroup to propagate events to members
             editLayer: new L.FeatureGroup().addTo(map),
             featuresLayer: this.drawnItems
         }));
+
+        this.startDrawing = function(control) {
+            // initial radius of 0 to detect click, see DeletableCircleEditor.onDrawingMouseUp
+            var opts = L.extend({ radius: 0 }, self.style);
+            editTools.startCircle(null, opts);
+
+            control.state('cancel-no-go-create');
+        };
+
+        this.stopDrawing = function(control) {
+            editTools.stopDrawing();
+            control.state('no-go-create');
+        };
 
         this.button = L.easyButton({
             states: [
@@ -54,25 +76,22 @@ BR.NogoAreas = L.Control.extend({
                     stateName: BR.NogoAreas.STATE_CREATE,
                     icon: 'fa-ban',
                     title: BR.NogoAreas.MSG_BUTTON,
-                    onClick: function(control) {
-                        // initial radius of 0 to detect click, see DeletableCircleEditor.onDrawingMouseUp
-                        var opts = L.extend({ radius: 0 }, self.style);
-                        editTools.startCircle(null, opts);
-
-                        control.state('cancel-no-go-create');
-                    }
+                    onClick: this.startDrawing
                 },
                 {
                     stateName: BR.NogoAreas.STATE_CANCEL,
                     icon: 'fa-ban active',
                     title: BR.NogoAreas.MSG_BUTTON_CANCEL,
-                    onClick: function(control) {
-                        editTools.stopDrawing();
-                        control.state('no-go-create');
-                    }
+                    onClick: this.stopDrawing
                 }
             ]
         });
+
+        // prevent instant re-activate when turning off button by both Pointer and Click
+        // events firing in Chrome mobile while L.Map.Tap enabled for circle drawing
+        L.DomEvent.addListener(this.button.button, 'pointerdown', L.DomEvent.stop);
+
+        L.DomEvent.addListener(document, 'keydown', this._keydownListener, this);
 
         this.editTools.on(
             'editable:drawing:end',
@@ -118,6 +137,20 @@ BR.NogoAreas = L.Control.extend({
 
         // dummy, no own representation, delegating to EasyButton
         return L.DomUtil.create('div');
+    },
+
+    _keydownListener: function(e) {
+        if (!BR.Util.keyboardShortcutsAllowed(e)) {
+            return;
+        }
+        if (e.keyCode === this.options.shortcut.draw.disable && this.button.state() === BR.NogoAreas.STATE_CANCEL) {
+            this.stopDrawing(this.button);
+        } else if (
+            e.keyCode === this.options.shortcut.draw.enable &&
+            this.button.state() === BR.NogoAreas.STATE_CREATE
+        ) {
+            this.startDrawing(this.button);
+        }
     },
 
     displayUploadError: function(message) {
@@ -319,9 +352,43 @@ BR.NogoAreas = L.Control.extend({
 
 BR.NogoAreas.include(L.Evented.prototype);
 
-L.Editable.prototype.createVertexIcon = function(options) {
-    return BR.Browser.touch ? new L.Editable.TouchVertexIcon(options) : new L.Editable.VertexIcon(options);
-};
+BR.Editable = L.Editable.extend({
+    // Editable relies on L.Map.Tap for touch support. But the Tap handler is not added when
+    // the Browser supports Pointer events, which is the case for mobile Chrome. So we add it
+    // ourselves in this case, but disabled and only enable while drawing (#259).
+    // Also, we generally disable the Tap handler in the map options for route dragging,
+    // see Map.js, so we always need to enable for drawing.
+
+    initialize: function(map, options) {
+        L.Editable.prototype.initialize.call(this, map, options);
+
+        if (!this.map.tap) {
+            this.map.addHandler('tap', L.Map.Tap);
+            this.map.tap.disable();
+        }
+    },
+
+    registerForDrawing: function(editor) {
+        this._tapEnabled = this.map.tap.enabled();
+        if (!this._tapEnabled) {
+            this.map.tap.enable();
+        }
+
+        L.Editable.prototype.registerForDrawing.call(this, editor);
+    },
+
+    unregisterForDrawing: function(editor) {
+        if (!this._tapEnabled) {
+            this.map.tap.disable();
+        }
+
+        L.Editable.prototype.unregisterForDrawing.call(this, editor);
+    },
+
+    createVertexIcon: function(options) {
+        return BR.Browser.touch ? new L.Editable.TouchVertexIcon(options) : new L.Editable.VertexIcon(options);
+    }
+});
 
 BR.EditingTooltip = L.Handler.extend({
     options: {

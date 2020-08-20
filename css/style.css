@@ -79,29 +79,54 @@ table.dataTable {
 
 footer {
     flex: none;
-
     background-color: #f7f7f9;
 }
 
+#stats-container {
+    display: none;
+}
+#stats-container[style*='display: block'] {
+    display: flex !important;
+}
+
+#stats-info {
+    align-items: center;
+    height: 46px;
+    display: flex;
+}
+#stats-info > div {
+    margin: auto;
+}
 #stats {
     flex-grow: 1;
     margin: 0;
     padding: 0;
     text-align: center;
 }
-#stats li {
-    margin: 0 1rem;
-    display: inline-block;
+
+ul#stats {
+    display: flex;
+    align-items: stretch;
+    justify-content: space-around;
+    flex-wrap: wrap;
+    width: 100%;
+    margin: 0;
+    padding: 0;
 }
+#stats li {
+    display: inline-block;
+    flex: 0 1 auto;
+    list-style-type: none;
+    margin: 0 0.2em;
+}
+
+p.stats-label {
+    margin-bottom: 0.2em;
+}
+
 @media (max-width: 767px) {
-    #stats li {
-        margin: 0 0.5rem;
-    }
     #stats {
         padding-top: 0.4em;
-    }
-    p.stats-label {
-        margin-bottom: 0.4em;
     }
 }
 
@@ -162,6 +187,8 @@ input#trackname:focus:invalid {
 #elevation-btn {
     align-items: center;
     margin-right: 0.5rem;
+    height: max-content;
+    align-self: center;
 }
 
 .routing-draw-enabled {
@@ -226,6 +253,37 @@ input#trackname:focus:invalid {
     /* turn off bootstrap 'break-word' */
     word-wrap: normal;
     margin: 0;
+}
+
+table.dataTable.mini .track-analysis-header-distance {
+    text-align: right;
+    padding-right: 4px;
+}
+
+.track-analysis-table {
+    font-size: small;
+    padding-bottom: 0.5em;
+}
+
+table.dataTable.track-analysis-table tfoot td {
+    font-weight: bold;
+    text-align: right;
+    padding-right: 4px;
+    padding-top: 4px;
+}
+
+.track-analysis-title {
+    text-transform: capitalize;
+}
+
+.track-analysis-distance {
+    text-align: right;
+}
+
+.track-analysis-heading {
+    margin-top: 0.7em;
+    margin-bottom: 0.1em;
+    font-size: 1.2em;
 }
 
 /* dashed line animation, derived from Chris Coyier and others
@@ -369,6 +427,12 @@ button.btn {
     margin-right: -1em;
 }
 
+/* about dialog */
+#about-contact-language {
+    font-size: 0.9em;
+    margin: -6px 0 6px 20px;
+}
+
 /*
 * DataTables
 */
@@ -394,13 +458,10 @@ table.dataTable thead .sorting {
     background-position: center right -3px;
 }
 
+table.track-analysis-table tbody tr:hover,
 table.dataTable.hover tbody tr:hover,
-table.dataTable.hover tbody tr.odd:hover,
-table.dataTable.hover tbody tr.even:hover,
-table.dataTable.display tbody tr:hover,
-table.dataTable.display tbody tr.odd:hover,
-table.dataTable.display tbody tr.even:hover {
-    background-color: rgba(255, 255, 0, 0.2);
+table.dataTable.display tbody tr:hover {
+    background-color: rgba(255, 255, 0, 0.3);
 }
 table.dataTable.hover tbody tr:hover.selected,
 table.dataTable.display tbody tr:hover.selected {

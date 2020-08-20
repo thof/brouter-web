@@ -1,6 +1,6 @@
 {
     "name": "brouter-web",
-    "version": "0.11.1",
+    "version": "0.13.0",
     "description": "Web client for BRouter",
     "main": "js/index.js",
     "scripts": {
@@ -52,7 +52,7 @@
         "i18next": "^15.0.4",
         "i18next-browser-languagedetector": "^3.0.1",
         "i18next-xhr-backend": "^2.0.1",
-        "jquery": "3.5.0",
+        "jquery": "3.5.1",
         "jquery-i18next": "^1.2.1",
         "jstree": "^3.3.8",
         "leaflet": "~1.6.0",
@@ -64,8 +64,8 @@
         "leaflet-geometryutil": "^0.9.1",
         "leaflet-hotline": "^0.4.0",
         "leaflet-plugins": "~3.0.0",
-        "leaflet-providers": "^1.5.0",
-        "leaflet-routing": "nrenner/leaflet-routing#246ab4e",
+        "leaflet-providers": "^1.10.2",
+        "leaflet-routing": "nrenner/leaflet-routing#e94e153",
         "leaflet-sidebar-v2": "nrenner/leaflet-sidebar-v2#dev",
         "leaflet-triangle-marker": "^1.0.2",
         "leaflet.gridlayer.googlemutant": "0.9.0",
