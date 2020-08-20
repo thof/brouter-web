@@ -4,7 +4,7 @@ BR.StreetView = L.Control.extend({
         layersControl: null,
         shortcut: {
             enable: 69, // char code for 'E'
-            disable: 27, // char code for 'ESC'
+            disable: 27 // char code for 'ESC'
         },
         photo: {
             width: 640,
@@ -76,7 +76,7 @@ BR.StreetView = L.Control.extend({
             // change the cursor to pointer
             L.DomUtil.addClass(this.map.getContainer(), 'streetview-enabled');
             // add Google Maps layer if necessary
-            if(!this.options.layersControl.getLayer(this._googleMapsName)) {
+            if (!this.options.layersControl.getLayer(this._googleMapsName)) {
                 var layerData = BR.layerIndex[this.GOOGLE_MAPS_ID];
                 var layer = this.options.layersControl.createLayer(layerData);
                 var name = layerData.properties.name;
@@ -91,9 +91,10 @@ BR.StreetView = L.Control.extend({
         } else {
             this.map.off('click', this.onMapClick, this);
             // restore the original active layer if it wasn't Google Maps layer
-            activeLayer = this.options.layersControl.getActiveBaseLayer(); 
+            activeLayer = this.options.layersControl.getActiveBaseLayer();
             if (
-                activeLayer !== null && activeLayer.layer.id === this.GOOGLE_MAPS_ID &&
+                activeLayer !== null &&
+                activeLayer.layer.id === this.GOOGLE_MAPS_ID &&
                 this._originalActiveLayer.layer.id !== this.GOOGLE_MAPS_ID
             ) {
                 googleMapsLayer = this.options.layersControl.getLayerById(this.GOOGLE_MAPS_ID);
