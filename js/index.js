@@ -214,6 +214,11 @@
 
         exportRoute = new BR.Export(router, pois);
 
+        streetView = new BR.StreetView({
+            routing: routing,
+            layersControl: mapContext.layersControl
+        });
+
         routing.on('routing:routeWaypointEnd routing:setWaypointsEnd', function(evt) {
             search.clear();
             onUpdate(evt && evt.err);
@@ -279,6 +284,7 @@
 
         pois.addTo(map);
         routingPathQuality.addTo(map);
+        streetView.addTo(map);
 
         map.addControl(
             new BR.OpacitySliderControl({
@@ -287,16 +293,6 @@
                 callback: L.bind(routing.setOpacity, routing)
             })
         );
-
-        // Google Street View integration
-        if (BR.keys.googleStreetView) {
-            map.addControl(
-                new BR.StreetView({
-                    routing: routing,
-                    layersControl: mapContext.layersControl
-                })
-            );
-        }
 
         // initial option settings (after controls are added and initialized with onAdd)
         router.setOptions(nogos.getOptions());
