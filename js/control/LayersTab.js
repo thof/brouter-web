@@ -26,6 +26,11 @@ BR.LayersTab = BR.ControlLayers.extend({
         BR.ControlLayers.prototype.onAdd.call(this, map);
 
         map.on('baselayerchange overlayadd overlayremove', this.storeActiveLayers, this);
+
+        var container = new L.DomUtil.create('div');
+        // keys not working when map container does not have focus, use document instead
+        L.DomEvent.removeListener(container, 'keydown', this._keydownListener);
+        L.DomEvent.addListener(document, 'keydown', this._keydownListener, this);
     },
 
     onRemove: function(map) {
@@ -469,6 +474,20 @@ BR.LayersTab = BR.ControlLayers.extend({
                         this.activateLayer(obj);
                     }
                 }
+            }
+        }
+    },
+
+    _keydownListener: function(e) {
+        // Suppress shortcut handling when a text input field is focussed
+        if (document.activeElement.type == 'text' || document.activeElement.type == 'textarea') {
+            return;
+        }
+        if (e.keyCode >= 49 && e.keyCode <= 57) {
+            index = parseInt(e.key) - 1;
+            if (this.getBaseLayers().length > index) {
+                this.removeActiveLayers();
+                this.activateBaseLayerIndex(index);
             }
         }
     }
