@@ -3,7 +3,7 @@ BR.StreetView = L.Control.extend({
         routing: null,
         layersControl: null,
         shortcut: {
-            enable: 69, // char code for 'E'
+            toggle: 87, // char code for 'w'
             disable: 27 // char code for 'ESC'
         },
         photo: {
@@ -28,6 +28,7 @@ BR.StreetView = L.Control.extend({
         this._googleMapsName = BR.layerIndex[this.GOOGLE_MAPS_ID].properties.name;
 
         this.drawButton = L.easyButton({
+            id: 'street-view-toggle',
             states: [
                 {
                     stateName: 'activate-street-view',
@@ -56,12 +57,6 @@ BR.StreetView = L.Control.extend({
         // keys not working when map container does not have focus, use document instead
         L.DomEvent.removeListener(container, 'keyup', this._keyupListener);
         L.DomEvent.addListener(document, 'keyup', this._keyupListener, this);
-
-        // L.DomEvent.removeListener(container, 'keydown', this._keydownListener);
-        // L.DomEvent.addListener(document, 'keydown', this._keydownListener, this);
-
-        // L.DomEvent.addListener(container, 'click', this._clickListener);
-        // L.DomEvent.addListener(document, 'click', this._clickListener, this);
 
         return container;
     },
@@ -100,10 +95,15 @@ BR.StreetView = L.Control.extend({
                 googleMapsLayer = this.options.layersControl.getLayerById(this.GOOGLE_MAPS_ID);
                 this.map.removeLayer(googleMapsLayer.layer);
                 this.options.layersControl.activateLayer(this._originalActiveLayer);
+            }
+            if (typeof this._streetViewLayer !== 'undefined') {
                 this._streetViewLayer.remove();
             }
+            if (typeof this._streetviewLine !== 'undefined') {
+                this._streetviewLine.remove();
+                this._arrowHead.remove();
+            }
             this._streetView = [];
-            this.map.off('click', this.onMapClick, this);
             // remove pointer cursor
             L.DomUtil.removeClass(this.map.getContainer(), 'streetview-enabled');
         }
@@ -116,8 +116,8 @@ BR.StreetView = L.Control.extend({
         }
         if (e.keyCode === this.options.shortcut.disable) {
             this.activate(false);
-        } else if (e.keyCode === this.options.shortcut.enable) {
-            this.activate(true);
+        } else if (e.keyCode === this.options.shortcut.toggle) {
+            $('#street-view-toggle').click();
         }
     },
 
@@ -137,6 +137,29 @@ BR.StreetView = L.Control.extend({
             pixCoord['y'] = pixCoord['y'] - this.options.photo.height;
             var getCoordNE = this.map.layerPointToLatLng(pixCoord);
             var imgBounds = L.latLngBounds(geoCoordSW, getCoordNE);
+
+            if (typeof this._streetviewLine !== 'undefined') {
+                this._streetviewLine.remove();
+                this._arrowHead.remove();
+            }
+            var latlngs = [pointA, pointB];
+            this._streetviewLine = L.polyline(latlngs, { color: 'red' });
+            this._streetviewLine.addTo(this.map);
+            this._arrowHead = L.polylineDecorator(this._streetviewLine, {
+                patterns: [
+                    {
+                        offset: '100%',
+                        repeat: 0,
+                        symbol: L.Symbol.arrowHead({
+                            pixelSize: 15,
+                            polygon: false,
+                            pathOptions: { stroke: true, color: 'red' }
+                        })
+                    }
+                ]
+            });
+            this._arrowHead.addTo(this.map);
+
             if (typeof this._streetViewLayer !== 'undefined') {
                 this._streetViewLayer.remove();
             }
@@ -148,105 +171,19 @@ BR.StreetView = L.Control.extend({
         }
     },
 
-    // // press and hold 'ctrl' to activate streetview
-    // _keydownListener: function(e) {
-    //     if (e.keyCode === this.options.shortcut.ctrl && this.options.layersControl.getLayer(this._googleMapsName)) {
-    //         // change the cursor to pointer
-    //         L.DomUtil.addClass(this.map.getContainer(), 'streetview-enabled');
-    //         // store the original active layer
-    //         this._originalActiveLayer = this.options.layersControl.getActiveBaseLayer();
-    //         // store the current drawing state and disable drawing if it's enabled
-    //         this._drawState = this.options.routing._draw._enabled;
-    //         if (this._drawState) {
-    //             this.options.routing.draw(false);
-    //         }
-    //     }
-    // },
-
-    // // release 'ctrl' to deactivate streeview
-    // _keyupListener: function(e) {
-    //     if (e.keyCode === this.options.shortcut.ctrl && this.options.layersControl.getLayer(this._googleMapsName)) {
-    //         // restore the original active layer if it wasn't Google Maps layer
-    //         if (
-    //             this.options.layersControl.getActiveBaseLayer().layer.id === this.GOOGLE_MAPS_ID &&
-    //             this._originalActiveLayer.layer.id !== this.GOOGLE_MAPS_ID
-    //         ) {
-    //             googleMapsLayer = this.options.layersControl.getLayerById(this.GOOGLE_MAPS_ID);
-    //             this.map.removeLayer(googleMapsLayer.layer);
-    //             this.options.layersControl.activateLayer(this._originalActiveLayer);
-    //             this._streetViewLayer.remove();
-    //         }
-    //         this._streetView = [];
-    //         // reset the pointer cursor and drawing state
-    //         L.DomUtil.removeClass(this.map.getContainer(), 'streetview-enabled');
-    //         if (this._drawState) {
-    //             this.options.routing.draw(true);
-    //         }
-    //     }
-    // },
-
-    // _clickListener: function(e) {
-    //     if (e.ctrlKey && this.options.layersControl.getLayer(this._googleMapsName)) {
-    //         // replace the original active layer by Google Maps base layer
-    //         if (this.options.layersControl.getActiveBaseLayer().layer.id !== this.GOOGLE_MAPS_ID) {
-    //             this.map.removeLayer(this._originalActiveLayer.layer);
-    //             googleMapsLayer = this.options.layersControl.getLayerById(this.GOOGLE_MAPS_ID);
-    //             this.options.layersControl.activateLayer(googleMapsLayer);
-    //         }
-    //         // create overlay layer with Street View panorama
-    //         var initialLatLng = this.map.mouseEventToLatLng(e);
-    //         this._streetView.push(initialLatLng);
-    //         if (this._streetView.length > 1 && BR.keys.googleStreetView) {
-    //             var pointA = this._streetView[this._streetView.length - 2];
-    //             var pointB = this._streetView[this._streetView.length - 1];
-    //             var angle = this.calculateHeadingAngle(pointA, pointB);
-    //             var imgUrl = this.getImage(pointA, angle);
-    //             var geoCoordSW = this.map.getBounds()['_southWest'];
-    //             var pixCoord = this.map.latLngToLayerPoint(geoCoordSW);
-    //             pixCoord['x'] = pixCoord['x'] + this.options.photo.width;
-    //             pixCoord['y'] = pixCoord['y'] - this.options.photo.height;
-    //             var getCoordNE = this.map.layerPointToLatLng(pixCoord);
-    //             var imgBounds = L.latLngBounds(geoCoordSW, getCoordNE);
-    //             if (typeof this._streetViewLayer !== 'undefined') {
-    //                 this._streetViewLayer.remove();
-    //             }
-    //             this._streetViewLayer = L.imageOverlay(imgUrl, imgBounds, { interactive: true });
-    //             this._streetViewLayer.on('mouseover', this._mouseoverStreetViewLayer, this);
-    //             this._streetViewLayer.on('mouseout', this._mouseoutStreetViewLayer, this);
-    //             this._streetViewLayer.on('mousedown', this._mousedownStreetViewLayer, this);
-    //             this._streetViewLayer.addTo(this.map);
-    //         }
-    //     }
-    // },
-
     _mousedownStreetViewLayer: function(e) {
-        if (e.originalEvent.ctrlKey) {
-            return;
-        }
-        this._streetViewLayer.remove();
-        if (this._drawState) {
-            this.options.routing.draw(true);
+        if (typeof this._streetViewLayer !== 'undefined') {
+            this._streetViewLayer.remove();
+            this.map.on('click', this.onMapClick, this);
         }
     },
 
     _mouseoverStreetViewLayer: function(e) {
-        if (e.originalEvent.ctrlKey) {
-            return;
-        }
-        this._drawState = this.options.routing._draw._enabled;
-        if (this._drawState) {
-            this.options.routing.draw(false);
-        }
+        this.map.off('click', this.onMapClick, this);
     },
 
     _mouseoutStreetViewLayer: function(e) {
-        if (e.originalEvent.ctrlKey) {
-            return;
-        }
-        this.options.routing.draw(true);
-        if (this._drawState) {
-            this.options.routing.draw(true);
-        }
+        this.map.on('click', this.onMapClick, this);
     },
 
     calculateHeadingAngle: function(pointA, pointB) {
